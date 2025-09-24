@@ -25,4 +25,19 @@ print("Valid email" if len(user_email) != 0 and "@" in user_email and user_email
 
 print("Valid email" if len(user_email1) !=0 and "@" in user_email1 and user_email1.endswith(".com") else "Invalid email")
 
+print("*"*15)
 
+print("Check user name is string , not a None and is longer than 5 characters")
+
+username="Abi"
+
+print("valid username" if isinstance(username,str) and username != None and len(username) < 5 else " Invalid Username" )
+
+print("*"*15)
+print("check if the user is either and admin or a moderator, and either they are not banned or they've verified theeir email")
+
+
+role="moderator"
+is_banned=False
+email_verified=True
+print("Access granted" if (role in ["admin", "moderator"]) and (not is_banned or email_verified) else "Access denied")
