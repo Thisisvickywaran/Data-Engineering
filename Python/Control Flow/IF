@@ -1,5 +1,7 @@
-score =89
+score ="Mber"
 if score >=90:
     print(score)
+elif(type(score)==str):
+    print(" its not a interger for the calculation")
 else:
     print("score is lesser than the 90")

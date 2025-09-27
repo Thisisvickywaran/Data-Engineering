@@ -1,0 +1,39 @@
+Score="Vicky"
+
+if not isinstance(Score,int):
+    print("Score is a Invalid Please a number")
+elif(Score>90):
+    print(" Score is greater than the 90" )
+else:
+    print("Lesser than the 90")
+
+
+#Using a Try and except in the if
+
+Number=input()
+try:
+    Number=float(Number) # input always returns a string so converting it , using that inside a try because if we enter a string here itself we might get a exception
+    if(Number>90):
+        print(" Score is greater than the 90" )
+    else:
+        print("Lesser than the 90")
+except:
+    print("Please Enter a Number")
+
+#Validate the Email
+
+
+def validcheck(Email):
+    Email=Email.strip()
+    if len(Email) < 0:
+        print("Email cannot be empty")
+        return False
+    elif not ('@' and '.' in Email):
+        print("Email contains @ and .")
+        return False
+
+
+Email="abcde@c.om"
+Email1=""
+if validcheck(Email):
+    print("its a Valid Email Address")

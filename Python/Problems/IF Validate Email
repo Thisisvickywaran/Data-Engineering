@@ -1,0 +1,32 @@
+
+#Validate the Email
+
+
+def validcheck(Email):
+    Email=Email.strip()
+    if len(Email)== 0:
+        print("Email cannot be empty")
+        return False
+    elif not ('@'in Email and '.' in Email):
+        print("Email contains @ and .")
+        return False
+    elif not (Email.endswith((".com",".org",".net"))):
+        print("Email should end with .com .org .net")
+        return False
+    elif Email.count('@') !=1 or Email.count('.') !=1:
+        print("Email should Only contains one @ and . in it")
+        return False
+    elif len(Email) > 254:
+        print("Email should contain only character lesser than 254")
+        return False
+    elif not (Email[0].isalnum() and Email[-1].isalnum()):
+        print("Email should start and end with letters or digit")
+        return False
+    return True
+
+
+
+Email="-abcdegmail@.com"
+Email1=""
+if validcheck(Email):
+    print("its a Valid Email Address")
