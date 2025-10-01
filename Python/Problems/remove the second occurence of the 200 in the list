@@ -1,0 +1,9 @@
+lst=[1,200,33,4,200,7,8,]
+count=0
+for i in range(len(lst)):
+    if lst[i]==200:
+        count+=1
+        if count == 2:
+            lst.pop(i)
+            break
+print(lst)
