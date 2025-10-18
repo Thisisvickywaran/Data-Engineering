@@ -1,5 +1,5 @@
 lst=[5,6,0,4,1,3,2]
-target=7
+target=8
 pairs=[]
 
 for i in range(len(lst)):
