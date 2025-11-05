@@ -1,0 +1,285 @@
+reading csv from the databricks volumes
+df = spark.read.option("header", True)
+	.option("inferSchema", True)
+	.csv("/Volumes/workspace/stream/streaming/source/")
+display(df)
+
+
+gives us the list of all directories in that directory
+dbutils.fs.ls('/Volumes/workspace/stream/streaming/source/')
+
+reading json from the databricks volumes
+df_json=spark.read.format('json').option('inferSchema',True)\
+        .option('header',True)\
+        .option('multiLine',False)\
+        .load('/Volumes/workspace/stream/streaming/source/drivers.json')
+display(df_json)
+
+changin a schema:
+df=spark.read.format('csv').option('header',True).schema(my_ddl_schema).load('/Volumes/workspace/stream/streaming/source/BigMart Sales.csv')
+
+another way of changing the schema:
+
+df_schema_changed = df.withColumn("Item_Weight", df["Item_Weight"].cast("string"))
+df_schema_changed.printSchema()
+
+
+another way is using the structType:
+my_struct_schema=StructType([
+    StructField('Item_Identifier',StringType(),True),
+    StructField('Item_Weight',StringType(),True),
+    StructField('Item_Fat_Content',StringType(),True),
+    StructField('Item_Visibility',DoubleType(),True),
+    StructField('Item_Type',StringType(),True),
+    StructField('Item_MRP',DoubleType(),True),
+    StructField('Outlet_Identifier',StringType(),True),
+    StructField('Outlet_Establishment_Year',IntegerType(),True),
+    StructField('Outlet_Size',StringType(),True),
+    StructField('Outlet_Type',StringType(),True),
+    StructField('Outlet_Location_Type',StringType(),True),
+    StructField('Item_Outlet_Sales',DoubleType(),True)
+])
+
+SQl Select:
+
+df_sel = df.select('Item_Identifier','Item_Weight','Item_Fat_Content')
+display(df_sel)
+
+Standized way of selecting a column from the dataframe ( its used in the aggegation function)
+df.select(col("Item_Identifier"),col("Item_Weight"),col("Item_Fat_Content")).display()
+
+
+ALIAS
+
+df.select(col("Item_Identifier").alias("ITEMS")).display()
+
+filter/where
+displaying the item_fat_content which are low fat
+df.select(col("Item_Identifier"),col("Item_Type"),col("Item_MRP")).filter(col("Item_Fat_Content")=='Low Fat').display()
+
+Display mrp lesser than 100
+df.select(col("Item_Identifier"),col("Item_Type"),col("Item_MRP")).filter(col("Item_MRP")<100).display()
+
+adding two conditions in the filtering
+df.select(col("Item_Identifier"),col("Item_Type"),col("Item_MRP")).filter((col("Item_MRP")<100) &  (col("Item_Type")=='Soft Drinks')).display()
+
+#fetch the data with tier in tier1 and tier 2 and outlet size is Null isin() isNull()
+df.filter((col("Outlet_Location_Type").isin('Tier 1','Tier 2')) & (col("Outlet_Size").isNull())).display()
+
+change the column renamed in the dataframe level
+df.withColumnRenamed('Item_Weight','ITEM_wei').select(col('ITEM_wei')).display()
+
+withColumn
+newColumn creation with a default value
+df = df.withColumn('flag',lit('new'))
+
+Creation of two column with multiplication
+df.withColumn('multiple',col('Item_Weight')*col('Item_MRP')).alias("Multiple").display()
+
+#write a difference replace the value of item_fat_content from (low fat to LF) (Regular to RG)
+
+df.withColumn("Item_Fat_Content",regexp_replace(col("Item_Fat_Content"),"Low Fat","LF"))\
+    .withColumn("Item_Fat_Content",regexp_replace(col("Item_Fat_Content"),"Regular","RG")).display()
+
+With COlumn
+
+Type Casting
+df=df.withColumn('Item_weight',col('Item_Weight').cast(StringType()))
+df.printSchema()
+
+Currentdate in a new column
+df.withColumn('currentdate',current_date()).display()
+
+Sort/OrderBy
+df.sort("Item_weight",ascending=False).display()
+
+df.sort(col("Item_weight").desc()).display()
+
+df.sort(col("Item_Visibility").asc()).display()
+
+df.sort(col("Item_weight").asc(),col("Item_MRP").desc()).display()
+
+ascending and descending for two columns
+df.sort(col("Item_weight").asc(),col("Item_MRP").desc()).display()
+df.sort(['Item_weight','Item_Visibility'],ascending=[0,1]).display()
+
+df .sort(col('Item_weight').asc(),col('Item_MRP').desc()).display()
+
+LIMT
+df.limit(10).display() 
+
+drop
+df.drop('Item_Visibility').display() 
+df.drop('Item_Visibility','Item_Type').display() 
+
+Drop
+Drop_duplicates( this is also called a d do)
+
+df.dropDuplicates('Item_Type').display()
+df.drop_duplicates(subset=['Item_Type']).display()( this deletes the based on the column duplicates)
+
+df.distinct.display()
+(this deletes based on the whole row)
+
+union and unionbyname
+union - combines two dataframes.
+
+df1.union(df2).display()
+df1.unionByName(df3).display()
+
+
+string function
+
+df.select(initcap('Item_Type').alias('initcap')).display() ( displays the string with first letters has uppercase and other letters has lowercase)
+df.select(upper('item_type').alias('Upper_item_type')).display()
+df.select(lower('item_type').alias('Ulower_item_type')).display()
+
+
+
+current date
+df.withColumn('currentdate',current_date()).display()
+
+add 7 add to the current date
+df.withcolumn("week_after,date_add('currentdate',7)).display()
+df = df.withColumn('week_after',date_add('curr_date',7))
+df = df.withColumn('week_before',date_sub('current_date',7))
+
+dropping using dropna
+
+df.dropna().display()
+df.dropna(subset=['Item_Type']).display()(drop the row if the column contains any null value)
+df.dropna(how='all').display()( drop sonly when all the rwos values are null)
+
+df.dropna(thresh=2).display() ( delete the rows if it has two null values)
+
+fill using fillna
+
+df.fillna('Notavailable').display() ( drops the )
+
+df.fillna({'Outlet_Size':'Notavailable'}).display()
+df.fillna(0,['Outlet_Size']).display()
+
+
+split and indexing
+df.withColumn('Outlet_Type',split('Outlet_Type',' ')).display()
+
+indexing
+
+df.withColumn('Outlet_Type',split('Outlet_Type',' ')[1]).display()
+
+explode
+df_exp=df.withColumn('Outlet_Type',split('Outlet_Type',' ')).display() ( splitted the dataframe into arrays)
+df_exp.withColumn('Outlet_Type',explode('Outlet_Type')).display()
+array contains
+
+df_exp.withColumn('Outlet_Type',array_contains('Outlet_Type','Type 1')).display()# Checks if the array contains the value of Type 1)
+
+
+df_exp.withColumn('Outlet_Type',array_contains('Outlet_Type','Supermarket')).display()# Checks if the array contains the value of Supermarket)
+
+
+GroupBY
+SUM
+
+df.groupBY('Item_Type').agg(sum('Item_MRP')).display()
+
+df.groupBY('Item_Type').agg(avg('Item_MRP')).display()
+
+df.groupBY('Item_Type','Outlet_Size').agg(sum('Item_MRP'),avg('Item_MRP')).display()
+
+collect_list
+
+df_book.groupby('user').agg(collect_list('book')).display()
+
+PIVOT
+
+df.groupby('Item_Type').Pivot('Outlet_Size').agg(avg('Item_MRP')).display()
+
+when otherwise ( same as case when in sql)
+
+df.withColumn('VEG_FLAG',when(col('Item_Type')=='MEAT','Non-Veg').otherwise('Veg')).display()
+
+df.withColumn('Veg Expensive or InExpensive',
+              when(
+                (col('Veg_flag')=='veg')&
+                (col('Item_MRP')<100),
+                'Veg-InExpensive')
+              .when(
+                  (col('Veg_flag')=='veg') & 
+                (col('Item_MRP')>=100),
+                'Veg-Expensive').
+              otherwise('Non-Veg')
+).display()  )
+
+Joins:
+
+inner Join
+df1.join(df2,df{'dept_id'}==df2['dept_id'],'inner').display()
+
+Left Join
+df1.join(df2,df{'dept_id'}==df2['dept_id'],'left').display()
+
+Right Join
+df1.join(df2,df1['dept_id']==df2['dept_id'],'right').display()
+
+Anti join
+df1.join(df2,df1['dept_id']==df2['dept_id'],'anti').display()
+
+windows functions
+
+df.withColumn('rows_column',row_number(),over(Window.PartitionBy('item_Type').orderby('Item_MRP')).display()
+
+RANK AND DENSE_RANK
+
+df.withColumn('rank',rank.over(Window.orderBy(col('Item_Type').desc())))
+.withColumn('dense_rank',dense_rank.over(Window.orderBy(col('Item_Type').desc()))).display()
+
+
+data writing:
+
+df.write.format('csv').save('path')
+
+| Format                 | Example                                           |
+| ---------------------- | ------------------------------------------------- |
+| **CSV**                | `df.write.csv("/path/to/folder")`                 |
+| **Parquet**            | `df.write.parquet("/path/to/folder")`             |
+| **JSON**               | `df.write.json("/path/to/folder")`                |
+| **ORC**                | `df.write.orc("/path/to/folder")`                 |
+| **JDBC** (DBs)         | `df.write.jdbc(url, table, properties=props)`     |
+| **Delta (Databricks)** | `df.write.format("delta").save("/path/to/delta")` |
+
+You can specify how Spark handles existing data:
+
+"overwrite" – replaces data
+
+"append" – adds new data
+
+"ignore" – skips if data exists
+
+"error" (default) – throws error if exists
+
+append:
+df.write.format('csv').mode('appennd').option('path',location).save()
+df.write.format('csv').mode('overwrite').option('path',location).save()
+df.write.format('csv').mode('error').option('path',location).save()
+df.write.format('csv').mode('ignore').option('path',location).save()
+
+what is parquet
+
+delta file format
+difference between parquet and delta file format
+
+HDFC life:   
+27200
+31760
+
+1917
+2255
+
+
+
+
+
+
+
+
